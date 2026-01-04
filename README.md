@@ -8,4 +8,36 @@
   Run `npm i` to install the dependencies.
 
   Run `npm run dev` to start the development server.
-  
+
+ # Unified National Electoral Roll (UNPER) System
+
+A centralized, secure, and legally compliant platform for managing a Unified National Electoral Roll, inspired by the Election Commission of India’s UNPER initiative.
+The system integrates database-driven voter management, AI/ML-based duplicate detection, and blockchain-backed auditability.
+
+## 📌 Problem Statement
+
+India’s electoral rolls are traditionally maintained at the state level, leading to:
+
+Duplication during inter-state migration
+
+Delays in voter roll updates
+
+Limited transparency and auditability
+
+Risk of inconsistencies across jurisdictions
+
+This project proposes a single national source of truth for electoral data while preserving legally mandated workflows such as Form-6 migration approvals.
+
+## 🎯 Objectives
+
+Maintain one national identity per elector
+
+Support legal voter migration without duplicate voting
+
+Enable role-based electoral administration
+
+Preserve audit trails and data integrity
+
+Support multilingual electoral rolls
+
+Provide clean integration points for AI/ML and Blockchain
