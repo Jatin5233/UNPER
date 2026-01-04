@@ -38,14 +38,7 @@ Enable role-based electoral administration
 
 ## System Architecture
 
-Frontend (Web UI)
-        |
-Backend APIs
-        |
-Unified Electoral Database (Core)
-        |           |
-     AI/ML       Blockchain
- (Dedup/DSE)   (Audit Hashes)
+<img width="667" height="302" alt="image" src="https://github.com/user-attachments/assets/5dd6b9eb-157d-4d13-a0bb-de7fba4cd0d5" />
 
 
 Preserve audit trails and data integrity
