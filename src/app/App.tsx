@@ -10,6 +10,9 @@ import { BLODataEntry } from "./components/BLODataEntry";
 import { PollingStations } from "./components/PollingStations";
 import { AuditLog } from "./components/AuditLog";
 import { CitizenPortal } from "./components/CitizenPortal";
+import { AnomalyAnalysis } from "./components/AnomalyAnalysis";
+import { ERODashboard } from "./components/ERODashboard";
+import { StatisticalAnalysis } from "./components/StatisticalAnalysis";
 
 interface User {
   name: string;
@@ -35,6 +38,8 @@ export default function App() {
       setActiveView("citizen-portal");
     } else if (role === "BLO") {
       setActiveView("blo-entry");
+    } else if (role === "RO") {
+      setActiveView("ero-dashboard");
     } else {
       setActiveView("dashboard");
     }
@@ -43,30 +48,69 @@ export default function App() {
   const handleLogout = () => {
     setCurrentUser(null);
     setActiveView("dashboard");
+    // Clear localStorage
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("user");
   };
 
   const renderContent = () => {
-    if (!currentUser) return null;
+    if (!currentUser) {
+      return <NationalDashboard />;
+    }
 
     switch (activeView) {
       case "dashboard":
-        return currentUser.role === "CEC" || currentUser.role === "EC" 
-          ? <NationalDashboard />
-          : <StateDashboard />;
+        // Role-based dashboard routing
+        if (currentUser.role === "CEC" || currentUser.role === "EC") {
+          return <NationalDashboard />;
+        } else if (currentUser.role === "CEO" || currentUser.role === "DEO") {
+          return <StateDashboard />;
+        } else if (currentUser.role === "RO") {
+          return <ERODashboard />;
+        } else if (currentUser.role === "BLO") {
+          return <BLODataEntry />;
+        } else if (currentUser.role === "Citizen") {
+          return <CitizenPortal />;
+        }
+        // Default to state dashboard for other roles
+        return <StateDashboard />;
+
       case "elector-search":
         return <ElectorSearch />;
+
       case "migration":
         return <MigrationWorkflow />;
+
       case "blo-entry":
         return <BLODataEntry />;
+
       case "polling-stations":
         return <PollingStations />;
+
       case "audit-log":
         return <AuditLog />;
+
       case "citizen-portal":
         return <CitizenPortal />;
+
+      case "anomaly-analysis":
+        return <AnomalyAnalysis />;
+
+      case "ero-dashboard":
+        return <ERODashboard />;
+      case "statistical-analysis":
+        return <StatisticalAnalysis userRole={currentUser.role} userState={currentUser.state} />;
+
       default:
-        return <NationalDashboard />;
+        // Default based on role
+        if (currentUser.role === "CEC" || currentUser.role === "EC") {
+          return <NationalDashboard />;
+        } else if (currentUser.role === "CEO" || currentUser.role === "DEO") {
+          return <StateDashboard />;
+        } else if (currentUser.role === "RO") {
+          return <ERODashboard />;
+        }
+        return <StateDashboard />;
     }
   };
 

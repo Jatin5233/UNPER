@@ -1,65 +1,80 @@
-import { useState, useEffect } from "react";
-import { apiClient } from "../services/apiClients";
+import { useEffect, useState } from "react";
+import api from "../lib/axios";
 
-export interface StateData {
+interface DashboardData {
+  cards: {
+    totalElectors: number;
+    pendingMigrations: number;
+    duplicateAlerts: number;
+    pollingStations: number;
+  };
+  stateDistribution: Array<{
+    state: string;
+    count: number;
+  }>;
+}
+
+interface StateChartDataItem {
   state: string;
+  fullStateName: string;
   electors: number;
-  short: string;
 }
 
-export interface MigrationTrend {
-  month: string;
-  migrations: number;
-}
-
-export interface CategoryData {
+interface CategoryDataItem {
   name: string;
   value: number;
   color: string;
 }
 
-export interface DashboardMetrics {
-  totalElectors: number;
-  pendingMigrations: number;
-  duplicateAlerts: number;
-  dataQualityScore: number;
-  activePollingStations: number;
-}
+export const categoryData: CategoryDataItem[] = [
+  { name: "General", value: 82, color: "#003d82" },
+  { name: "PwD", value: 3, color: "#f59e0b" },
+  { name: "Service Voters", value: 2, color: "#10b981" },
+  { name: "Overseas", value: 1, color: "#ef4444" },
+  { name: "Others", value: 12, color: "#8b5cf6" },
+];
 
-export function useDashboardData() {
-  const [stateData, setStateData] = useState<StateData[]>([]);
-  const [migrationTrend, setMigrationTrend] = useState<MigrationTrend[]>([]);
-  const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+export function useNationalDashboard() {
+  const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [statesRes, trendsRes, categoriesRes, metricsRes] = await Promise.all([
-          apiClient("/dashboard/states"),
-          apiClient("/dashboard/migration-trends"),
-          apiClient("/dashboard/categories"),
-          apiClient("/dashboard/metrics"),
-        ]);
-
-        setStateData(statesRes.data || []);
-        setMigrationTrend(trendsRes.data || []);
-        setCategoryData(categoriesRes.data || []);
-        setMetrics(metricsRes.data || null);
-        setError(null);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to fetch dashboard data");
-        console.error("Dashboard data fetch error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    api.get("/dashboard/national")
+      .then(res => {
+        setData(res.data);
+        setError(false);
+      })
+      .catch(err => {
+        console.error("Failed to load dashboard:", err);
+        setError(true);
+      })
+      .finally(() => setLoading(false));
   }, []);
 
-  return { stateData, migrationTrend, categoryData, metrics, loading, error };
+  // Transform state distribution data for the chart
+  const stateChartData: StateChartDataItem[] = data?.stateDistribution.map(item => ({
+    state: item.state.length > 15 
+      ? item.state.slice(0, 12) + '...' 
+      : item.state,
+    fullStateName: item.state,
+    electors: item.count
+  })) || [];
+
+  // Format number for Y-axis
+  const formatYAxisValue = (value: number): string => {
+    if (value >= 10000000) return `${(value / 10000000).toFixed(1)}Cr`;
+    if (value >= 100000) return `${(value / 100000).toFixed(1)}L`;
+    return value.toString();
+  };
+
+  return {
+    data,
+    loading,
+    error,
+    stateChartData,
+    formatYAxisValue,
+  };
 }
+
+export type { DashboardData, StateChartDataItem, CategoryDataItem };

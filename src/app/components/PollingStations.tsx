@@ -1,9 +1,39 @@
-import { MapPin, Users, Search } from "lucide-react";
+import { MapPin, Users, Search, Shield, Info } from "lucide-react";
 import { useState } from "react";
 import { usePollingStations } from "../../hooks/usePollingStations";
 
+// Add role helper
+const getUserRole = (): string => {
+  const user = localStorage.getItem('user');
+  if (user) {
+    return JSON.parse(user).role || 'CITIZEN';
+  }
+  return 'CITIZEN';
+};
+
+const canViewPollingStations = (role: string): boolean => {
+  return ['CEC', 'CEO', 'DEO', 'RO', 'BLO'].includes(role);
+};
+
 export function PollingStations() {
   const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const userRole = getUserRole();
+
+  // Check access
+  if (!canViewPollingStations(userRole)) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <Shield className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <p className="text-red-600 font-semibold text-lg">Access Denied</p>
+          <p className="text-gray-600 text-sm mt-2">
+            You don't have permission to view polling stations.
+          </p>
+          <p className="text-xs text-gray-500 mt-1">Current Role: {userRole}</p>
+        </div>
+      </div>
+    );
+  }
 
   const { stations, loading, error } = usePollingStations();
 
@@ -33,6 +63,17 @@ export function PollingStations() {
   const avgPerStation = totalStations > 0 ? Math.round(totalElectors / totalStations) : 0;
   const accessibleStations = stations.filter(station => station.accessibility !== "none").length;
 
+  const getRoleScopeMessage = () => {
+    const scopeMessages = {
+      'CEC': 'Viewing all polling stations nationwide',
+      'CEO': 'Viewing polling stations in your state',
+      'DEO': 'Viewing polling stations in your district',
+      'RO': 'Viewing polling stations in your constituency',
+      'BLO': 'Viewing your assigned polling stations'
+    };
+    return scopeMessages[userRole as keyof typeof scopeMessages] || 'Limited view';
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
@@ -53,6 +94,13 @@ export function PollingStations() {
         <div>
           <h2 className="text-2xl font-semibold text-gray-900">Polling Station Management</h2>
           <p className="text-sm text-gray-600 mt-1">View and manage polling station details</p>
+          
+          {/* Role-based scope indicator */}
+          <div className="flex items-center gap-2 mt-2 text-xs">
+            <Info className="w-4 h-4 text-blue-600" />
+            <span className="text-blue-600 font-medium">{getRoleScopeMessage()}</span>
+            <span className="text-gray-500">• Role: {userRole}</span>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
